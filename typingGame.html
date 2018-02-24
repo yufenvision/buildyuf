@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>打字游戏</title>
+	<meta charset="utf-8">
+</head>
+<style type="text/css">
+	body{
+		margin: 0;
+		padding: 0;
+		width: 100vw;
+		height: 100vh;
+	}
+	div{
+		margin: 0;
+		padding: 0;
+		font-size: 16px;
+		font-weight: bold;
+		color: white;
+	}
+	#letters{
+		position: relative;
+		margin: 0 auto;
+		width: 100%;
+		height: calc(100% - 30px);
+		background-color: #FFF8DC;
+	}
+	.letter{
+		position: absolute;
+		width: 50px;
+		height: 50px;
+		text-align: center;
+		line-height: 50px;
+		background-color: green;
+	}
+	#level{
+		border: 1px solid red;
+		width: 30px;
+		margin:0 5px 0 5px;
+		text-align: center;
+	}
+	.warn{
+		font-size: 12px;
+		color: red;
+	}
+	.score{
+		color: green;
+		font-weight: bold;
+		padding-left: 10px;
+		padding-right: 15px;
+	}
+</style>
+<body>
+	<input type="button" name="start" value="开始游戏" onclick="javascript:startGame()">
+	<input type="button" name="suspend" value="暂停游戏" onclick="javascript:suspendGame()">
+	当前为 x<input id="level" type="number" max="5" min="1" name="letterSpeed" value="1">倍速度
+	<span class="warn">只能是1~5倍速度</span>
+	<input type="button" name="restart" value="重新开始" onclick="javascript:reStart()">
+	总击中次数<span class="score">0</span>
+	总击打次数<span class="score">0</span>
+	<div id="letters">
+		
+
+	</div>
+
+
+
+
+
+
+	<script type="text/javascript">
+		var div = document.getElementById("letters");
+		var w = div.offsetWidth;
+		var h = div.offsetHeight;
+		var timer1 = null;
+		var timer2 = null;
+		//当前屏幕的字母
+		var letterList = [];
+		//速度等级
+		var seedArr = [[800,10],[700,8],[500,7],[400,6],[200,5]];
+		//有效击中
+		var goodPunch = 0;
+		var gP = document.getElementsByClassName("score")[0];
+		//总击打次数
+		var totalPunch = 0;
+		var tP = document.getElementsByClassName("score")[1];
+		//开始游戏
+		function startGame(){
+			var level = document.getElementById("level").value || 1;
+			//console.log(level);
+			if(level>5 || level <1){
+				level = 1;
+				document.getElementById("level").value = 1;
+			}
+			//设置表先停
+			if(timer1)clearInterval(timer1);
+			if(timer2)clearInterval(timer2);
+			timer1 = setInterval(createLetter,seedArr[level-1][0]);
+			timer2 = setInterval(top2bottom,seedArr[level-1][1]);
+			//添加键盘事件
+			window.addEventListener("keydown",bitLetter);
+
+		}
+
+		function reStart(){
+			document.getElementById("letters").innerHTML = "";
+			letterList.splice(0,letterList.length);
+			goodPunch = 0;
+			totalPunch = 0;
+			// clearInterval(timer1);
+			// clearInterval(timer2);
+			startGame()
+		}
+
+
+		//暂停游戏
+		function suspendGame(){
+			clearInterval(timer1);
+			clearInterval(timer2);
+			//移除键盘事件
+			window.removeEventListener("keydown",bitLetter)
+		}
+
+		//创建26个随机字母
+		function createLetter(){
+			var letterCode = parseInt(Math.random()*26+65);
+			var randomLetter = String.fromCharCode(letterCode);	
+			var nodeDiv = document.createElement("div");
+			var left = parseInt(Math.random()*(w-49));
+			nodeDiv.style.left = left + "px";
+			nodeDiv.setAttribute("class","letter");
+			nodeDiv.innerHTML = randomLetter;			
+			div.appendChild(nodeDiv);
+			letterList.push(nodeDiv);
+
+		}
+		
+
+		//移动字母块
+		function top2bottom(){
+			for (var i = 0; i < letterList.length; i++) {
+				var top = parseInt(letterList[i].style.top) || 0;
+				var newTop = top + 1;			
+				letterList[i].style.top = newTop + "px"; 
+
+				if(newTop>=h-50){
+					div.removeChild(letterList[i]);
+					letterList.splice(i,1);
+				}
+			}
+		}
+
+		
+
+		//监听键盘事件,完成消除功能
+		// document.onkeydown=function(e){
+		// 	var e = event||window.event||arguments.callee.caller.arguments[0];
+		// 	for (var i = 0; i < letterList.length; i++) {
+		// 		var key = letterList[i].innerHTML.charCodeAt(0);
+		// 		if(e && e.keyCode == key){
+		// 			div.removeChild(letterList[i]);
+		// 			letterList.splice(i,1);					
+		// 			return;
+		// 		}
+		// 	}
+
+		// }
+		function bitLetter(e){
+			if(e.keyCode>=65 && e.keyCode<=90){
+				totalPunch++;	
+				var mybit = String.fromCharCode(e.keyCode);
+				for (var i = 0; i < letterList.length; i++) {
+					if(letterList[i].innerHTML == mybit){
+						div.removeChild(letterList[i]);
+						letterList.splice(i,1);
+						goodPunch++;				
+						break;
+					}
+					// else{
+					// 	totalPunch++;
+					//	break;为什么这里不能加？？？？
+					// }
+				}
+
+				gP.innerHTML = goodPunch;
+				tP.innerHTML = totalPunch;
+			}
+			
+		}
+		/**
+		 * 完成一个工具方法：为一元素注册事件
+		 * @param ele 事件源
+		 * @param eventName 事件名称
+		 * @param fun 响应函数
+		 */
+		function addListener(ele,eventName,fun){
+			//注册一个事件监听器(不支持IE)
+			if(ele.addEventListener){
+				ele.addEventListener(eventName,fun);
+			}else{
+				ele.attachEvent("on"+eventName,fun);
+			}
+		};
+
+	</script>
+
+</body>
+</html>

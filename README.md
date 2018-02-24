@@ -1,3 +1,3 @@
 # buildyuf
-Coding from a tester
-自己做的一些JS小程序
+from tester to coder!
+自己写的一些JS小程序
